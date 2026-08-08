@@ -1,6 +1,13 @@
+// Format a Date object as YYYY-MM-DD using LOCAL time (not UTC) — avoids timezone shift bugs
+function toLocalDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Get the number of days in a specific month (handles 28/29/30/31 automatically)
 export function getDaysInMonth(year, month) {
-  // month is 0-indexed (0 = January). Day 0 of "next month" = last day of "this month"
   return new Date(year, month + 1, 0).getDate();
 }
 
@@ -8,8 +15,8 @@ export function getDaysInMonth(year, month) {
 export function getMonthlyTotal(expenses, year, month) {
   return expenses
     .filter((exp) => {
-      const d = new Date(exp.date);
-      return d.getFullYear() === year && d.getMonth() === month;
+      const [expYear, expMonth] = exp.date.split('-').map(Number);
+      return expYear === year && (expMonth - 1) === month;
     })
     .reduce((sum, exp) => sum + exp.amount, 0);
 }
@@ -18,13 +25,13 @@ export function getMonthlyTotal(expenses, year, month) {
 export function getWeeklyTotal(expenses) {
   const today = new Date();
   const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(today.getDate() - 6); // includes today = 7 days total
+  sevenDaysAgo.setDate(today.getDate() - 6);
+
+  const todayStr = toLocalDateString(today);
+  const sevenDaysAgoStr = toLocalDateString(sevenDaysAgo);
 
   return expenses
-    .filter((exp) => {
-      const d = new Date(exp.date);
-      return d >= sevenDaysAgo && d <= today;
-    })
+    .filter((exp) => exp.date >= sevenDaysAgoStr && exp.date <= todayStr)
     .reduce((sum, exp) => sum + exp.amount, 0);
 }
 
@@ -36,14 +43,14 @@ export function getDailyBreakdown(expenses) {
   for (let i = 6; i >= 0; i--) {
     const day = new Date();
     day.setDate(today.getDate() - i);
-    const dayStr = day.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    const dayStr = toLocalDateString(day); // LOCAL date, not UTC — this is the fix
 
     const total = expenses
       .filter((exp) => exp.date === dayStr)
       .reduce((sum, exp) => sum + exp.amount, 0);
 
     result.push({
-      label: day.toLocaleDateString('en-US', { weekday: 'short' }), // "Mon", "Tue"...
+      label: day.toLocaleDateString('en-US', { weekday: 'short' }),
       total,
     });
   }
@@ -63,9 +70,9 @@ export function getMonthlyComparison(expenses) {
     const total = getMonthlyTotal(expenses, year, month);
 
     result.push({
-      label: d.toLocaleDateString('en-US', { month: 'short' }), // "Mar", "Apr"...
+      label: d.toLocaleDateString('en-US', { month: 'short' }),
       total,
-      daysInMonth: getDaysInMonth(year, month), // useful if you want a daily average later
+      daysInMonth: getDaysInMonth(year, month),
     });
   }
   return result;
