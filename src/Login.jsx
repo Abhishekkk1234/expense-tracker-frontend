@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-const AUTH_URL = 'http://localhost:8080/api/auth';
+const AUTH_URL = 'https://expense-tracker-backend-8eee.onrender.com/api/auth';
+
 
 function Login({ onLogin }) {
   const [isRegister, setIsRegister] = useState(false);

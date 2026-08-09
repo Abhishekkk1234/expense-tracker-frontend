@@ -3,7 +3,7 @@ import axios from 'axios';
 import Dashboard from './Dashboard';
 import Login from './Login';
 
-const API_URL = 'http://localhost:8080/api/expenses';
+const API_URL = 'https://expense-tracker-backend-8eee.onrender.com/api/expenses';
 
 function App() {
   const [authData, setAuthData] = useState(() => {
